@@ -4,7 +4,7 @@
 <meta name="description" content="" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>H5截取当前页面并保存 | Gridea</title>
-<link rel="shortcut icon" href="https://leomelody.github.io//favicon.ico?v=1556334109461">
+<link rel="shortcut icon" href="https://leomelody.github.io//favicon.ico?v=1556342675072">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 <link rel="stylesheet" href="https://leomelody.github.io//styles/main.css">
 
@@ -18,7 +18,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://leomelody.github.io/">
-  <img class="avatar" src="https://leomelody.github.io//images/avatar.png?v=1556334109461" alt="">
+  <img class="avatar" src="https://leomelody.github.io//images/avatar.png?v=1556342675072" alt="">
   </a>
   <h1 class="site-title">
     Gridea
@@ -116,8 +116,43 @@ html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
 	});
 
 </code></pre>
-<p>效果如图所示：</p>
-<p>这里是因为img大小是因为我们没有调整，当然，到这一步也还没有必要调整图片大小</p>
+<p>效果如图所示：
+<img src="https://leomelody.github.io//post-images/1556334404233.png" alt="canvas2img">
+这里是因为img大小是因为我们没有调整，当然，到这一步也还没有必要调整图片大小</p>
+<p>此时我们可以看下这个img标签的src内容是个base64编码</p>
+<h2 id="img保存到本地">img保存到本地</h2>
+<p>这一步是最关键的一步</p>
+<p>首先聊一下img的保存，之前的开发中经常会有点击保存（点击图片保存这样子的）这种场景。</p>
+<p>有两种情况：</p>
+<p>1、本地图片（本地服务器图片），使用a标签即可直接实现图片的保存：</p>
+<pre><code>&lt;img src=&quot;./test.jpg&quot; alt=&quot;&quot;&gt;
+&lt;a href=&quot;./test.jpg&quot; download&gt;点我下载图片&lt;/a&gt;
+</code></pre>
+<p>src为base64的图片和本地图片一样，都会被下载</p>
+<p>如图：
+<img src="https://leomelody.github.io//post-images/1556335819952.gif" alt="saveImg"></p>
+<p>2、网络图片，使用a标签只会去打开一个新的页面。而我们解决的这个问题不会涉及到网络图片，所以可以忽略这个问题。</p>
+<p>那我们可以拟定一个下载图片的操作：</p>
+<pre><code>html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
+      document.body.appendChild(canvas)
+      // canvas 转 img
+      const img = new Image()
+      img.src = canvas.toDataURL(&quot;image/png&quot;) // 这里需要指定格式
+      document.body.appendChild(img)
+
+      const a = document.createElement('a')
+      a.setAttribute('href', img.src)
+      a.setAttribute('dowload', 'downImg')
+      a.innerHTML = '点我下载'
+      document.body.appendChild(a)
+
+    });
+</code></pre>
+<p>然后。。。。</p>
+<p>是的，成功了</p>
+<h2 id="解决问题">解决问题</h2>
+<p>上面的代码看着枯燥无味，可以看下这个功能解决哪些实际的场景吧：</p>
+<p>// TODO。。。</p>
 
             </div>
           </article>
