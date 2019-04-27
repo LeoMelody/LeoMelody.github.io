@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="description" content="" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>测试文章 | Gridea</title>
+<title>H5截取当前页面并保存 | Gridea</title>
 <link rel="shortcut icon" href="https://leomelody.github.io//favicon.ico?v=1556334109461">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 <link rel="stylesheet" href="https://leomelody.github.io//styles/main.css">
@@ -72,17 +72,52 @@
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              测试文章
+              H5截取当前页面并保存
             </h2>
             <div class="post-info">
               <time class="post-time">
-                · 2019-04-16 ·
+                · 2019-04-27 ·
               </time>
               
             </div>
             
+              <div class="post-feature-image" style="background-image: url('https://leomelody.github.io//post-images/h5-jie-qu-dang-qian-ye-mian-bing-bao-cun.jpg')">
+              </div>
+            
             <div class="post-content">
-              <p>测试内容</p>
+              <h2 id="分布解决问题">分布解决问题</h2>
+<p>这个问题可以分解为下面几个问题：</p>
+<p>1、想要截取的页面的文档内容转为canvas</p>
+<p>2、canvas转为img</p>
+<p>3、img保存到本地</p>
+<h2 id="页面内容">页面内容</h2>
+<p>实现方案就是使用canvas，这里有个现成的库： html2canvas 想要自己造轮子的大佬可以自己造。</p>
+<pre><code>&lt;div id=&quot;capture&quot; style=&quot;padding: 10px; background: #f5da55&quot;&gt;
+      &lt;h4 style=&quot;color: #000; &quot;&gt;Hello world!&lt;/h4&gt;
+    &lt;/div&gt;
+&lt;script src=&quot;./html2canvas.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+	html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
+		document.body.appendChild(canvas)
+	});
+&lt;/script&gt;
+</code></pre>
+<p>这是根据官方的一个例子写的demo，可以看到，当脚本运行成功后会在文档结尾生成一个和上方<code>Hello World</code>样式相同（基本相同）的canvas</p>
+<p>如图所示：<img src="https://leomelody.github.io//post-images/1556334088877.png" alt="html2canvas"></p>
+<h2 id="canvas转img">canvas转img</h2>
+<p>这个也是很简单，只需要调用 canvas 的 toDataURL 方法，将canvas内容转换为 image的src 即可：</p>
+<pre><code>
+html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
+		document.body.appendChild(canvas)
+		// canvas 转 img
+		const img = new Image()
+		img.src = canvas.toDataURL(&quot;image/png&quot;) // 这里需要指定格式
+		document.body.appendChild(img)
+	});
+
+</code></pre>
+<p>效果如图所示：</p>
+<p>这里是因为img大小是因为我们没有调整，当然，到这一步也还没有必要调整图片大小</p>
 
             </div>
           </article>
@@ -91,9 +126,9 @@
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://leomelody.github.io//post/hello-gridea">
+            <a href="https://leomelody.github.io//post/ce-shi-wen-zhang">
               <h3 class="post-title">
-                Hello Gridea
+                测试文章
               </h3>
             </a>
           </div>  
