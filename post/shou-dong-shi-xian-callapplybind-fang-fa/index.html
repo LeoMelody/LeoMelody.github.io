@@ -1,0 +1,315 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>手动实现 call、apply、bind方法 | LeoMelody</title>
+<link rel="shortcut icon" href="https://leomelody.github.io//favicon.ico?v=1561897499159">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://leomelody.github.io//styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://leomelody.github.io/">
+  <img class="avatar" src="https://leomelody.github.io//images/avatar.png?v=1561897499159" alt="">
+  </a>
+  <h1 class="site-title">
+    LeoMelody
+  </h1>
+  <p class="site-description">
+    学无止境
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+      
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              手动实现 call、apply、bind方法
+            </h2>
+            <div class="post-info">
+              <time class="post-time">
+                · 2019-06-30 ·
+              </time>
+              
+            </div>
+            
+              <div class="post-feature-image" style="background-image: url('https://leomelody.github.io//post-images/shou-dong-shi-xian-callapplybind-fang-fa.jpg')">
+              </div>
+            
+            <div class="post-content">
+              <h2 id="这篇文章是手写实现xxx功能部分的第一篇后续会陆续更新其他的">这篇文章是手写实现xxx功能部分的第一篇，后续会陆续更新其他的。</h2>
+<p><a href="https://www.jianshu.com/p/01fb61fec8b9">目录传送门</a> <a href="https://github.com/LeoMelody/jianshu/tree/master/code-self">github地址</a></p>
+<h2 id="一-call方法">一、call方法</h2>
+<p>考察知识点： call方法基础用法，Function原型对象，解构用法， JS方法中this的指向， arguments等</p>
+<pre><code>function sayName(p) {
+  console.log(this.name)
+  console.log(p)
+  return `${p}${this.name}`
+}
+
+// ES6版，比较简单
+Function.prototype.selfCall = function(ctx, ...args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use call with function')
+  }
+   // ctx = ctx || window || global // 这个写法是为了在NodeJS中运行，不过这个并非这个问题的关键
+  ctx = ctx || window
+  // 强绑定上ctx为执行上下文，这里为了为了防止方法名称冲突，我定义这个方法名称为_fn，不过这个并不是这个问题的关键考察点
+  ctx._fn = this
+  const res = ctx._fn(...args)
+  // 删除这个，防止影响外部的对象正常运行
+  delete ctx._fn
+  // 返回值也要注意
+  return res
+}
+
+
+// ES5版
+Function.prototype.es5call = function(ctx) {
+ if (typeof this !== 'function') {
+    throw new Error('you must use call with function')
+  }
+  ctx = ctx || window
+  var args = []
+  // 收集参数
+  for (var i = 1; i &lt; arguments.length; i++) {
+    args.push('arguments[' + i + ']')
+  }
+  var argstr = args.join(',')
+  ctx._fn = this
+  // ES5 由于无法通过解构的形式传入参数，只能通过字符串拼接然后再通过eval来执行
+  var res =  eval('ctx._fn(' + argstr + ')')
+  delete ctx._fn
+  return res
+}
+
+var obj = {name: 'wyh'}
+// 验证结果
+console.log(sayName.call(obj, 'xxx'))
+console.log(sayName.selfCall(obj, 'xxx')) 
+console.log(sayName.es5call(obj, 'xxx')) 
+</code></pre>
+<h2 id="二-apply方法">二、apply方法</h2>
+<p>考察知识点： apply方法用法</p>
+<pre><code>
+var obj = {
+  name: 'wyh'
+}
+
+function say() {
+  console.log(arguments[1] + arguments[2]) // expect 5
+  return this.name
+}
+
+Function.prototype.es6apply = function(ctx, args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use apply with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  const res = ctx._fn(...args)
+  delete ctx._fn
+  return res
+}
+
+Function.prototype.es5apply = function(ctx, args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use apply with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  var res
+  if (!args || !args.length) {
+    res = ctx._fn()
+  } else {
+    var argStr = args.reduce(function(prev, current, currentIndex) {
+      return prev + &quot;,args[&quot; + currentIndex + &quot;]&quot;
+    }, '')
+    argStr = argStr.substr(1)
+    res = eval(&quot;ctx._fn(&quot; + argStr + &quot;)&quot;)
+  }
+  delete ctx._fn
+  return res
+}
+
+console.log(say.apply(obj, [1,2,3,4])) // 5 , wyh
+console.log(say.es6apply(obj, [1,2,3,4])) // 5 , wyh
+console.log(say.es5apply(obj, [1,2,3,4])) // 5 , wyh
+</code></pre>
+<h2 id="三-bind方法">三、bind方法</h2>
+<p>考察知识点： bind方法的用法</p>
+<p>bind方法是不同于call方法和apply方法的，bind方法会返回一个新的函数。这个方法的接收参数形式和意义与call方法一样，不同的是，bind会将接收的第一个参数作为返回的函数的this对象。bind方法是函数珂里化的一个典型例子。</p>
+<p>对于bind，我会特殊对待，由浅到深完成实现它的过程</p>
+<pre><code>// 首先定义一些基础的数据方便后面使用
+var person = {
+  name: 'wyh',
+  sayName(n) {
+    return n + this.name
+  },
+  calc(a,b) {
+    console.log(this.name)
+    return a + b
+  }
+}
+
+var person2 = {
+  name: 'person2'
+}
+</code></pre>
+<h4 id="1-bind-辅助函数形式">1、 bind 辅助函数形式</h4>
+<pre><code>function _bind(fn, ctx, ...args) {
+  return function() {
+    return fn.apply(ctx, args)
+  }
+}
+
+console.log(_bind(person.sayName, person2, 'nihao')()) // nihaoperson2
+</code></pre>
+<p>这个只是为了更方便大家去理解bind函数的工作模式</p>
+<h4 id="2-使用applycall-实现bind函数-这个也是很简单的">2、使用apply/call 实现bind函数 这个也是很简单的</h4>
+<pre><code>Function.prototype.applybind = function(ctx, ...args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use bind with function')
+  }
+  ctx = ctx || window
+  var self = this
+  return function() {
+    return self.apply(ctx, args)
+  }
+}
+</code></pre>
+<h4 id="3-不使用强绑定形式">3、不使用强绑定形式</h4>
+<pre><code>// ES6版
+Function.prototype.es6bind = function(ctx, ...args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use bind with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  return function() {
+    const res = ctx._fn(...args)
+    delete ctx._fn
+    return res
+  }
+}
+
+// ES5 版
+Function.prototype.es5bind = function(ctx) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use bind with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  var args = []
+  // 做一层缓存，因为下面返回的function中的arguments会和这个arguments冲突
+  var fArguments = arguments
+  for (var i = 1; i &lt; fArguments.length; i++) {
+    args.push(&quot;fArguments[&quot; + i + &quot;]&quot;)
+  }
+  var argsStr = args.join(',')
+  return function() {
+    var res = eval(&quot;ctx._fn(&quot; + argsStr + &quot;)&quot;)
+    delete ctx._fn
+    return res
+  }
+}
+
+console.log(person.calc.es6bind(person2, 1, 2)()) // person2 3
+console.log(person.calc.es5bind(person2, 1, 2)()) // person2 3
+</code></pre>
+<h3 id="踩坑">踩坑</h3>
+<p>在写call和apply的时候，一时迷了写了下面这种实现方法：</p>
+<pre><code>// 错误示范
+Function.prototype.callError = function(ctx) {
+  ctx = ctx || window
+  ctx._fn = this
+  var newArr = [];
+  for(var i=1; i&lt;args.length; i++) {
+    newArr.push(args[i]);
+  }
+  // 因为这里newArr.join(',') 返回的是一个字符串，也就是不管这个call方法传入几个参数，真正执行的就只会有一个参数了
+  var res = ctx._fn(newArr.join(','));
+  delete ctx._fn;
+  return res
+}
+</code></pre>
+<h3 id="结语">结语</h3>
+<p>内置的call，apply，bind方法要比我写的要复杂且健壮的多。不过自己手动实现这三个方法主要是为了考察这三个函数是否掌握以及函数内部this的指向问题。</p>
+
+            </div>
+          </article>
+        </div>
+    
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://leomelody.github.io//post/h5-jie-qu-dang-qian-ye-mian-bing-bao-cun">
+              <h3 class="post-title">
+                H5截取当前页面并保存
+              </h3>
+            </a>
+          </div>  
+        
+
+        
+    
+        <div class="site-footer">
+  
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>
