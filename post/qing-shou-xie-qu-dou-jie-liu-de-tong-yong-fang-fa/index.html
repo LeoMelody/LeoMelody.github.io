@@ -1,0 +1,243 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>请手写去抖节流的通用方法 | LeoMelody</title>
+<link rel="shortcut icon" href="https://leomelody.github.io//favicon.ico?v=1562089108602">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://leomelody.github.io//styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://leomelody.github.io/">
+  <img class="avatar" src="https://leomelody.github.io//images/avatar.png?v=1562089108602" alt="">
+  </a>
+  <h1 class="site-title">
+    LeoMelody
+  </h1>
+  <p class="site-description">
+    学无止境
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+      
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              请手写去抖节流的通用方法
+            </h2>
+            <div class="post-info">
+              <time class="post-time">
+                · 2019-07-03 ·
+              </time>
+              
+            </div>
+            
+              <div class="post-feature-image" style="background-image: url('https://leomelody.github.io//post-images/qing-shou-xie-qu-dou-jie-liu-de-tong-yong-fang-fa.jpg')">
+              </div>
+            
+            <div class="post-content">
+              <h2 id="这篇文章是手写实现xxx功能部分的第一篇后续会陆续更新其他的">这篇文章是手写实现xxx功能部分的第一篇，后续会陆续更新其他的。</h2>
+<p><a href="https://www.jianshu.com/p/01fb61fec8b9">目录传送门</a> <a href="https://github.com/LeoMelody/jianshu/tree/master/code-self">github地址</a></p>
+<p>考察点： 去抖和节流的理解以及应用场景</p>
+<h2 id="去抖和节流">去抖和节流</h2>
+<p>去抖和节流是前端非常常用的工具方法。去抖可以保证一个操作不会不停地触发而节流可以保证在一段时间内一个操作只能触发一次。</p>
+<h3 id="节流应用场景">节流应用场景</h3>
+<p>节流应用场景最多就是页面上的事件处理了。比如鼠标滑动事件的监听，页面滚动事件的监听等等。</p>
+<p>这里就拿页面滚动这个例子来说。这里我们实现一个常见的读书的那种web页面的头部导航条。效果可以<a href="https://codepen.io/leomelody/pen/bPMrVj">看这里</a></p>
+<p>相应实例代码：</p>
+<pre><code>// HTML
+&lt;body&gt;
+  &lt;div id=&quot;nav&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;wrap&quot;&gt;&lt;/div&gt;
+&lt;/body&gt;
+// CSS
+#wrap {
+      background: red;
+      width: 300px;
+      height: 3300px;
+      margin: 0 auto;
+    }
+
+    #nav {
+      height: 10px;
+      background: greenyellow;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 1px;
+    }
+// JS
+;(function() {
+  // 获取屏幕高度和宽度 之所以用这个高度，是因为这个height = screenHeight + 滚动到底部是的window.scrollY
+  // 计算出可滚动的高度
+  const height = document.documentElement.scrollHeight
+  const width = document.documentElement.scrollWidth
+  const screenHeight = document.documentElement.clientHeight
+  const scrollHeight = height - screenHeight
+  const nav = document.querySelector('#nav')
+  window.addEventListener('scroll', function(e) {
+    let currentHeight = window.scrollY
+    nav.style.width = currentHeight/scrollHeight * width + 'px'
+  })
+})()
+</code></pre>
+<p>但是这种实现方式会非常频繁的修改DOM，这时候节流函数就体现处它的价值了。在这里，我直接就写节流函数的通用方法</p>
+<pre><code>// 节流函数
+const throttle = function(fn, timer = 500) {
+  let setTimeoutTimer 
+  return function() {
+    if (setTimeoutTimer) return 
+   // 这行代码是为了方便在Vue这类框架中使用节流函数 
+    fn &amp;&amp; fn.call(this, ...arguments)
+    setTimeoutTimer = setTimeout(() =&gt; {
+      setTimeoutTimer = null
+    }, timer)
+  }
+}
+
+// 用法：将触发时间修改为50ms触发一次
+window.addEventListener('scroll', throttle(function(e) {
+    let currentHeight = window.scrollY
+    nav.style.width = currentHeight/scrollHeight * width + 'px'
+  }, 50))
+</code></pre>
+<p><a href="https://codepen.io/leomelody/pen/zVjdbN">效果</a></p>
+<p>上面还有提到在Vue这类框架中用到这个节流函数的用法,我用setInterval模拟事件触发,一个简单的demo</p>
+<pre><code>let vue = {
+  data: {
+    name: 'wyh'
+  },
+  say(x) {
+    console.log(this.data.name + x)
+  }
+}
+
+let fn = throttle(vue.say, 500)
+
+setInterval(() =&gt; {
+  fn.call(vue, 'x')
+}, 100)
+</code></pre>
+<h3 id="去抖应用场景">去抖应用场景</h3>
+<p>个人认为去抖在平常开发中要用的更多，最常见的场景就是动态输入搜索（类似百度）这类功能的开发。这里就不做无去抖的效果展示了</p>
+<p>去抖通用函数</p>
+<pre><code>function debounce(fn, timer = 500) {
+  let debounceTimer
+  return function() {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+    }
+    // 参数缓存
+    let args = arguments
+    debounceTimer = setTimeout(() =&gt; {
+      fn &amp;&amp; fn.call(this, ...args)
+    }, timer)
+  }
+}
+</code></pre>
+<p>实例场景</p>
+<pre><code>// html
+&lt;input type=&quot;text&quot; id=&quot;input&quot; /&gt;
+// javascript
+;(function() {
+  const i = document.querySelector('#input')
+  // 模拟Vue环境
+  let vue = {
+    data: {
+      searchStr: ''
+    },
+    /**
+     * 模拟搜索方法
+     */
+    search() {
+      console.log(`正在以${this.data.searchStr}为检索值进行搜索`)
+    } 
+  }
+  let searchFn = debounce(vue.search)
+  i.addEventListener('input', function(e) {
+    // 模拟v-model
+    vue.data.searchStr = i.value
+    searchFn.call(vue)
+  })
+})()
+</code></pre>
+<p><a href="https://codepen.io/leomelody/pen/QXrqaE">效果</a> 记得打开下面的console看</p>
+
+            </div>
+          </article>
+        </div>
+    
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://leomelody.github.io//post/shou-dong-shi-xian-callapplybind-fang-fa">
+              <h3 class="post-title">
+                手动实现 call、apply、bind方法
+              </h3>
+            </a>
+          </div>  
+        
+
+        
+    
+        <div class="site-footer">
+  
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://leomelody.github.io/</id>
+    <title>LeoMelody</title>
+    <updated>2019-07-02T17:38:30.203Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://leomelody.github.io/"/>
+    <link rel="self" href="https://leomelody.github.io//atom.xml"/>
+    <subtitle>学无止境</subtitle>
+    <logo>https://leomelody.github.io//images/avatar.png</logo>
+    <icon>https://leomelody.github.io//favicon.ico</icon>
+    <rights>All rights reserved 2019, LeoMelody</rights>
+    <entry>
+        <title type="html"><![CDATA[请手写去抖节流的通用方法]]></title>
+        <id>https://leomelody.github.io//post/qing-shou-xie-qu-dou-jie-liu-de-tong-yong-fang-fa</id>
+        <link href="https://leomelody.github.io//post/qing-shou-xie-qu-dou-jie-liu-de-tong-yong-fang-fa">
+        </link>
+        <updated>2019-07-02T17:36:26.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="这篇文章是手写实现xxx功能部分的第一篇后续会陆续更新其他的">这篇文章是手写实现xxx功能部分的第一篇，后续会陆续更新其他的。</h2>
+<p><a href="https://www.jianshu.com/p/01fb61fec8b9">目录传送门</a> <a href="https://github.com/LeoMelody/jianshu/tree/master/code-self">github地址</a></p>
+<p>考察点： 去抖和节流的理解以及应用场景</p>
+<h2 id="去抖和节流">去抖和节流</h2>
+<p>去抖和节流是前端非常常用的工具方法。去抖可以保证一个操作不会不停地触发而节流可以保证在一段时间内一个操作只能触发一次。</p>
+<h3 id="节流应用场景">节流应用场景</h3>
+<p>节流应用场景最多就是页面上的事件处理了。比如鼠标滑动事件的监听，页面滚动事件的监听等等。</p>
+<p>这里就拿页面滚动这个例子来说。这里我们实现一个常见的读书的那种web页面的头部导航条。效果可以<a href="https://codepen.io/leomelody/pen/bPMrVj">看这里</a></p>
+<p>相应实例代码：</p>
+<pre><code>// HTML
+&lt;body&gt;
+  &lt;div id=&quot;nav&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;wrap&quot;&gt;&lt;/div&gt;
+&lt;/body&gt;
+// CSS
+#wrap {
+      background: red;
+      width: 300px;
+      height: 3300px;
+      margin: 0 auto;
+    }
+
+    #nav {
+      height: 10px;
+      background: greenyellow;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 1px;
+    }
+// JS
+;(function() {
+  // 获取屏幕高度和宽度 之所以用这个高度，是因为这个height = screenHeight + 滚动到底部是的window.scrollY
+  // 计算出可滚动的高度
+  const height = document.documentElement.scrollHeight
+  const width = document.documentElement.scrollWidth
+  const screenHeight = document.documentElement.clientHeight
+  const scrollHeight = height - screenHeight
+  const nav = document.querySelector('#nav')
+  window.addEventListener('scroll', function(e) {
+    let currentHeight = window.scrollY
+    nav.style.width = currentHeight/scrollHeight * width + 'px'
+  })
+})()
+</code></pre>
+<p>但是这种实现方式会非常频繁的修改DOM，这时候节流函数就体现处它的价值了。在这里，我直接就写节流函数的通用方法</p>
+<pre><code>// 节流函数
+const throttle = function(fn, timer = 500) {
+  let setTimeoutTimer 
+  return function() {
+    if (setTimeoutTimer) return 
+   // 这行代码是为了方便在Vue这类框架中使用节流函数 
+    fn &amp;&amp; fn.call(this, ...arguments)
+    setTimeoutTimer = setTimeout(() =&gt; {
+      setTimeoutTimer = null
+    }, timer)
+  }
+}
+
+// 用法：将触发时间修改为50ms触发一次
+window.addEventListener('scroll', throttle(function(e) {
+    let currentHeight = window.scrollY
+    nav.style.width = currentHeight/scrollHeight * width + 'px'
+  }, 50))
+</code></pre>
+<p><a href="https://codepen.io/leomelody/pen/zVjdbN">效果</a></p>
+<p>上面还有提到在Vue这类框架中用到这个节流函数的用法,我用setInterval模拟事件触发,一个简单的demo</p>
+<pre><code>let vue = {
+  data: {
+    name: 'wyh'
+  },
+  say(x) {
+    console.log(this.data.name + x)
+  }
+}
+
+let fn = throttle(vue.say, 500)
+
+setInterval(() =&gt; {
+  fn.call(vue, 'x')
+}, 100)
+</code></pre>
+<h3 id="去抖应用场景">去抖应用场景</h3>
+<p>个人认为去抖在平常开发中要用的更多，最常见的场景就是动态输入搜索（类似百度）这类功能的开发。这里就不做无去抖的效果展示了</p>
+<p>去抖通用函数</p>
+<pre><code>function debounce(fn, timer = 500) {
+  let debounceTimer
+  return function() {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+    }
+    // 参数缓存
+    let args = arguments
+    debounceTimer = setTimeout(() =&gt; {
+      fn &amp;&amp; fn.call(this, ...args)
+    }, timer)
+  }
+}
+</code></pre>
+<p>实例场景</p>
+<pre><code>// html
+&lt;input type=&quot;text&quot; id=&quot;input&quot; /&gt;
+// javascript
+;(function() {
+  const i = document.querySelector('#input')
+  // 模拟Vue环境
+  let vue = {
+    data: {
+      searchStr: ''
+    },
+    /**
+     * 模拟搜索方法
+     */
+    search() {
+      console.log(`正在以${this.data.searchStr}为检索值进行搜索`)
+    } 
+  }
+  let searchFn = debounce(vue.search)
+  i.addEventListener('input', function(e) {
+    // 模拟v-model
+    vue.data.searchStr = i.value
+    searchFn.call(vue)
+  })
+})()
+</code></pre>
+<p><a href="https://codepen.io/leomelody/pen/QXrqaE">效果</a> 记得打开下面的console看</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[手动实现 call、apply、bind方法]]></title>
+        <id>https://leomelody.github.io//post/shou-dong-shi-xian-callapplybind-fang-fa</id>
+        <link href="https://leomelody.github.io//post/shou-dong-shi-xian-callapplybind-fang-fa">
+        </link>
+        <updated>2019-06-30T12:22:25.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="这篇文章是手写实现xxx功能部分的第一篇后续会陆续更新其他的">这篇文章是手写实现xxx功能部分的第一篇，后续会陆续更新其他的。</h2>
+<p><a href="https://www.jianshu.com/p/01fb61fec8b9">目录传送门</a> <a href="https://github.com/LeoMelody/jianshu/tree/master/code-self">github地址</a></p>
+<h2 id="一-call方法">一、call方法</h2>
+<p>考察知识点： call方法基础用法，Function原型对象，解构用法， JS方法中this的指向， arguments等</p>
+<pre><code>function sayName(p) {
+  console.log(this.name)
+  console.log(p)
+  return `${p}${this.name}`
+}
+
+// ES6版，比较简单
+Function.prototype.selfCall = function(ctx, ...args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use call with function')
+  }
+   // ctx = ctx || window || global // 这个写法是为了在NodeJS中运行，不过这个并非这个问题的关键
+  ctx = ctx || window
+  // 强绑定上ctx为执行上下文，这里为了为了防止方法名称冲突，我定义这个方法名称为_fn，不过这个并不是这个问题的关键考察点
+  ctx._fn = this
+  const res = ctx._fn(...args)
+  // 删除这个，防止影响外部的对象正常运行
+  delete ctx._fn
+  // 返回值也要注意
+  return res
+}
+
+
+// ES5版
+Function.prototype.es5call = function(ctx) {
+ if (typeof this !== 'function') {
+    throw new Error('you must use call with function')
+  }
+  ctx = ctx || window
+  var args = []
+  // 收集参数
+  for (var i = 1; i &lt; arguments.length; i++) {
+    args.push('arguments[' + i + ']')
+  }
+  var argstr = args.join(',')
+  ctx._fn = this
+  // ES5 由于无法通过解构的形式传入参数，只能通过字符串拼接然后再通过eval来执行
+  var res =  eval('ctx._fn(' + argstr + ')')
+  delete ctx._fn
+  return res
+}
+
+var obj = {name: 'wyh'}
+// 验证结果
+console.log(sayName.call(obj, 'xxx'))
+console.log(sayName.selfCall(obj, 'xxx')) 
+console.log(sayName.es5call(obj, 'xxx')) 
+</code></pre>
+<h2 id="二-apply方法">二、apply方法</h2>
+<p>考察知识点： apply方法用法</p>
+<pre><code>
+var obj = {
+  name: 'wyh'
+}
+
+function say() {
+  console.log(arguments[1] + arguments[2]) // expect 5
+  return this.name
+}
+
+Function.prototype.es6apply = function(ctx, args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use apply with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  const res = ctx._fn(...args)
+  delete ctx._fn
+  return res
+}
+
+Function.prototype.es5apply = function(ctx, args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use apply with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  var res
+  if (!args || !args.length) {
+    res = ctx._fn()
+  } else {
+    var argStr = args.reduce(function(prev, current, currentIndex) {
+      return prev + &quot;,args[&quot; + currentIndex + &quot;]&quot;
+    }, '')
+    argStr = argStr.substr(1)
+    res = eval(&quot;ctx._fn(&quot; + argStr + &quot;)&quot;)
+  }
+  delete ctx._fn
+  return res
+}
+
+console.log(say.apply(obj, [1,2,3,4])) // 5 , wyh
+console.log(say.es6apply(obj, [1,2,3,4])) // 5 , wyh
+console.log(say.es5apply(obj, [1,2,3,4])) // 5 , wyh
+</code></pre>
+<h2 id="三-bind方法">三、bind方法</h2>
+<p>考察知识点： bind方法的用法</p>
+<p>bind方法是不同于call方法和apply方法的，bind方法会返回一个新的函数。这个方法的接收参数形式和意义与call方法一样，不同的是，bind会将接收的第一个参数作为返回的函数的this对象。bind方法是函数珂里化的一个典型例子。</p>
+<p>对于bind，我会特殊对待，由浅到深完成实现它的过程</p>
+<pre><code>// 首先定义一些基础的数据方便后面使用
+var person = {
+  name: 'wyh',
+  sayName(n) {
+    return n + this.name
+  },
+  calc(a,b) {
+    console.log(this.name)
+    return a + b
+  }
+}
+
+var person2 = {
+  name: 'person2'
+}
+</code></pre>
+<h4 id="1-bind-辅助函数形式">1、 bind 辅助函数形式</h4>
+<pre><code>function _bind(fn, ctx, ...args) {
+  return function() {
+    return fn.apply(ctx, args)
+  }
+}
+
+console.log(_bind(person.sayName, person2, 'nihao')()) // nihaoperson2
+</code></pre>
+<p>这个只是为了更方便大家去理解bind函数的工作模式</p>
+<h4 id="2-使用applycall-实现bind函数-这个也是很简单的">2、使用apply/call 实现bind函数 这个也是很简单的</h4>
+<pre><code>Function.prototype.applybind = function(ctx, ...args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use bind with function')
+  }
+  ctx = ctx || window
+  var self = this
+  return function() {
+    return self.apply(ctx, args)
+  }
+}
+</code></pre>
+<h4 id="3-不使用强绑定形式">3、不使用强绑定形式</h4>
+<pre><code>// ES6版
+Function.prototype.es6bind = function(ctx, ...args) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use bind with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  return function() {
+    const res = ctx._fn(...args)
+    delete ctx._fn
+    return res
+  }
+}
+
+// ES5 版
+Function.prototype.es5bind = function(ctx) {
+  if (typeof this !== 'function') {
+    throw new Error('you must use bind with function')
+  }
+  ctx = ctx || window
+  ctx._fn = this
+  var args = []
+  // 做一层缓存，因为下面返回的function中的arguments会和这个arguments冲突
+  var fArguments = arguments
+  for (var i = 1; i &lt; fArguments.length; i++) {
+    args.push(&quot;fArguments[&quot; + i + &quot;]&quot;)
+  }
+  var argsStr = args.join(',')
+  return function() {
+    var res = eval(&quot;ctx._fn(&quot; + argsStr + &quot;)&quot;)
+    delete ctx._fn
+    return res
+  }
+}
+
+console.log(person.calc.es6bind(person2, 1, 2)()) // person2 3
+console.log(person.calc.es5bind(person2, 1, 2)()) // person2 3
+</code></pre>
+<h3 id="踩坑">踩坑</h3>
+<p>在写call和apply的时候，一时迷了写了下面这种实现方法：</p>
+<pre><code>// 错误示范
+Function.prototype.callError = function(ctx) {
+  ctx = ctx || window
+  ctx._fn = this
+  var newArr = [];
+  for(var i=1; i&lt;args.length; i++) {
+    newArr.push(args[i]);
+  }
+  // 因为这里newArr.join(',') 返回的是一个字符串，也就是不管这个call方法传入几个参数，真正执行的就只会有一个参数了
+  var res = ctx._fn(newArr.join(','));
+  delete ctx._fn;
+  return res
+}
+</code></pre>
+<h3 id="结语">结语</h3>
+<p>内置的call，apply，bind方法要比我写的要复杂且健壮的多。不过自己手动实现这三个方法主要是为了考察这三个函数是否掌握以及函数内部this的指向问题。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[H5截取当前页面并保存]]></title>
+        <id>https://leomelody.github.io//post/h5-jie-qu-dang-qian-ye-mian-bing-bao-cun</id>
+        <link href="https://leomelody.github.io//post/h5-jie-qu-dang-qian-ye-mian-bing-bao-cun">
+        </link>
+        <updated>2019-04-27T02:38:16.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="分布解决问题">分布解决问题</h2>
+<p>这个问题可以分解为下面几个问题：</p>
+<p>1、想要截取的页面的文档内容转为canvas</p>
+<p>2、canvas转为img</p>
+<p>3、img保存到本地</p>
+<h2 id="页面内容">页面内容</h2>
+<p>实现方案就是使用canvas，这里有个现成的库： html2canvas 想要自己造轮子的大佬可以自己造。</p>
+<pre><code>&lt;div id=&quot;capture&quot; style=&quot;padding: 10px; background: #f5da55&quot;&gt;
+      &lt;h4 style=&quot;color: #000; &quot;&gt;Hello world!&lt;/h4&gt;
+    &lt;/div&gt;
+&lt;script src=&quot;./html2canvas.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+	html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
+		document.body.appendChild(canvas)
+	});
+&lt;/script&gt;
+</code></pre>
+<p>这是根据官方的一个例子写的demo，可以看到，当脚本运行成功后会在文档结尾生成一个和上方<code>Hello World</code>样式相同（基本相同）的canvas</p>
+<p>如图所示：<img src="https://leomelody.github.io//post-images/1556334088877.png" alt="html2canvas"></p>
+<h2 id="canvas转img">canvas转img</h2>
+<p>这个也是很简单，只需要调用 canvas 的 toDataURL 方法，将canvas内容转换为 image的src 即可：</p>
+<pre><code>
+html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
+		document.body.appendChild(canvas)
+		// canvas 转 img
+		const img = new Image()
+		img.src = canvas.toDataURL(&quot;image/png&quot;) // 这里需要指定格式
+		document.body.appendChild(img)
+	});
+
+</code></pre>
+<p>效果如图所示：
+<img src="https://leomelody.github.io//post-images/1556334404233.png" alt="canvas2img">
+这里是因为img大小是因为我们没有调整，当然，到这一步也还没有必要调整图片大小</p>
+<p>此时我们可以看下这个img标签的src内容是个base64编码</p>
+<h2 id="img保存到本地">img保存到本地</h2>
+<p>这一步是最关键的一步</p>
+<p>首先聊一下img的保存，之前的开发中经常会有点击保存（点击图片保存这样子的）这种场景。</p>
+<p>有两种情况：</p>
+<p>1、本地图片（本地服务器图片），使用a标签即可直接实现图片的保存：</p>
+<pre><code>&lt;img src=&quot;./test.jpg&quot; alt=&quot;&quot;&gt;
+&lt;a href=&quot;./test.jpg&quot; download&gt;点我下载图片&lt;/a&gt;
+</code></pre>
+<p>src为base64的图片和本地图片一样，都会被下载</p>
+<p>如图：
+<img src="https://leomelody.github.io//post-images/1556335819952.gif" alt="saveImg"></p>
+<p>2、网络图片，使用a标签只会去打开一个新的页面。而我们解决的这个问题不会涉及到网络图片，所以可以忽略这个问题。</p>
+<p>那我们可以拟定一个下载图片的操作：</p>
+<pre><code>html2canvas(document.querySelector(&quot;#capture&quot;)).then(canvas =&gt; {
+      document.body.appendChild(canvas)
+      // canvas 转 img
+      const img = new Image()
+      img.src = canvas.toDataURL(&quot;image/png&quot;) // 这里需要指定格式
+      document.body.appendChild(img)
+
+      const a = document.createElement('a')
+      a.setAttribute('href', img.src)
+      a.setAttribute('dowload', 'downImg')
+      a.innerHTML = '点我下载'
+      document.body.appendChild(a)
+
+    });
+</code></pre>
+<p>然后。。。。</p>
+<p>是的，成功了</p>
+<h2 id="解决问题">解决问题</h2>
+<p>上面的代码看着枯燥无味，可以看下这个功能解决哪些实际的场景吧：</p>
+<p>// TODO。。。</p>
+]]></content>
+    </entry>
+</feed>
