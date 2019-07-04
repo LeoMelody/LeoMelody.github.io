@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://leomelody.github.io/</id>
     <title>LeoMelody</title>
-    <updated>2019-07-02T17:41:53.409Z</updated>
+    <updated>2019-07-04T03:48:47.290Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://leomelody.github.io/"/>
     <link rel="self" href="https://leomelody.github.io//atom.xml"/>
@@ -10,6 +10,213 @@
     <logo>https://leomelody.github.io//images/avatar.png</logo>
     <icon>https://leomelody.github.io//favicon.ico</icon>
     <rights>All rights reserved 2019, LeoMelody</rights>
+    <entry>
+        <title type="html"><![CDATA[浅谈 BFC]]></title>
+        <id>https://leomelody.github.io//post/qian-tan-bfc</id>
+        <link href="https://leomelody.github.io//post/qian-tan-bfc">
+        </link>
+        <updated>2019-07-04T03:42:53.000Z</updated>
+        <content type="html"><![CDATA[<p>BFC是前端面试中CSS部分的一个常考项，但是这个概念却是很不好理解的。</p>
+<h2 id="官方的定义">官方的定义</h2>
+<p>BFC (block formatting context) 块级格式化上下文。</p>
+<p>在说BFC之前，先要说一下它的‘父亲’，FC（formatting context） 格式化上下文。FC用来表示页面中的某块区域是用什么格式来进行渲染布局的，常见的FC有： BFC，IFC（行级格式化上下文），GFC（网格布局格式化上下文）和FFC（自适应布局格式化上下文）。这四个好像是和display有着一些关系。由于我只对BFC有一些粗浅的理解，IFC，FFC，GFC这三个兄弟这里就不说了。</p>
+<h2 id="css视觉格式化模型与bfc">CSS视觉格式化模型与BFC</h2>
+<p>此处参考<a href="https://developer.mozilla.org/zh-CN/docs/Web/Guide/CSS/Visual_formatting_model">MDN</a></p>
+<p>在说BFC之前必须要了解CSS视觉格式化模型。如果已懂可自行跳过。</p>
+<p>CSS视觉格式化模型（visual formatting model）是用来将文档展示到视觉媒体上的计算规则，它会根据盒子模型将文档的元素生成一个个的盒子（Box）。</p>
+<p>一个页面是由很多个的Box构成的，每一个Box都会有自己的类型，Box的类型取决于这个Box是个什么元素以及这个Box的display属性是什么。不同类型的Box就会有不同的FC来控制它的布局。所以，BFC也就是用来控制block-level的Box的是如何进行布局的。</p>
+<p>下面解释几个定义</p>
+<ul>
+<li>block-level box</li>
+</ul>
+<p>块级盒子由块级元素（block-level element）生成。一个块级元素至少生成一个块级盒子，list-item除了自己的主块级盒子外，还有一个标记盒子。</p>
+<p>-block-level element</p>
+<p>块级元素，也就是display属性为 block,list-item,table的这些元素</p>
+<p>OK，到这里已经会比较清晰的了解到BFC的作用范围了</p>
+<h2 id="更通俗的理解bfc">更通俗的理解BFC</h2>
+<p>我看过很多的博客讲解BFC，但是还是更喜欢张鑫旭老师解释的。</p>
+<blockquote>
+<p>一个BFC就像是一个结界一样，可以控制其内部的block-level Box不去影响结界外部的元素的正常布局。而这也是为什么我们要去使用BFC的原因（因为没有结界，一个包含块内的元素可能会影响其他元素的正常布局）。</p>
+</blockquote>
+<p>那么，也就是说，不一定所有的块级盒子都会产生这个结界。</p>
+<p><strong>什么情况下会产生BFC呢？</strong></p>
+<ol>
+<li>
+<html> 根元素    （最外层的结界）
+</li>
+<li>position 值是absolute或fixed (也就是说，在我们不设置特殊的position值时，都不会产生BFC)</li>
+<li>float 元素</li>
+<li>display值为 inline-block 、 table-cell、 table-caption （说实话后面俩好像都没用过）</li>
+<li>overflow的值不是visible</li>
+<li>flex的直接子元素以及grid的直接子元素</li>
+</ol>
+<h2 id="bfc下有哪些表现">BFC下有哪些表现？</h2>
+<p>最基本的就是下面这五个特性：</p>
+<ol>
+<li>内部的block-level Box会在垂直方向一个接一个的放置</li>
+<li>上下margin重叠（取大值）</li>
+<li>不同BFC下互不干扰布局</li>
+<li>计算BFC高度时会将浮动元素也算入进去</li>
+<li>不与浮动元素重叠（这个应该也是因为3）</li>
+<li>BFC内block-level Box在无padding，border的情况下，其内部box会将margin-top和margin-bottom（最上面和最下面的元素）转移到父元素且发生重叠。会一层一层往上转移知道有box具有padding和border属性。但是当父元素构成BFC时，无法转移</li>
+</ol>
+<ul>
+<li>案例1、文字环绕 （float真的是实现文字环绕效果很方便的一个手段）</li>
+</ul>
+<pre><code>/*css*/
+  .wrap {
+    width: 100px;
+    background: red;
+    color: aliceblue;
+  }
+
+  .float {
+    float: left;
+    width: 50px;
+    height: 100px;
+  }
+</code></pre>
+<pre><code>// html
+&lt;div class=&quot;wrap&quot;&gt;
+    &lt;div class=&quot;float&quot;&gt;假装自己是个图片&lt;/div&gt;
+    &lt;!-- &lt;div class=&quot;text&quot;&gt;我是一段很长很长的文字我是一段很长很长的文字我是一段很长很长的文字&lt;/div&gt; --&gt;
+    &lt;div class=&quot;text&quot;&gt;我很短&lt;/div&gt;
+ &lt;/div&gt;
+</code></pre>
+<p>看下面这两张图的比较：float可以导致父元素的高度崩塌，又因为行框盒子（这里指文字）和浮动元素的不可重叠性,所以在文字比较长时会有环绕的效果。</p>
+<p>上面的父元素高度崩塌的解决方案也很简单，就是给文字的Box设置一个after伪元素。</p>
+<pre><code>.text::after {
+  content: &quot;&quot;;
+  display: block;/*clear属性只作用在块级元素上*/
+  clear: both;
+}
+</code></pre>
+<p><img src="https://upload-images.jianshu.io/upload_images/7140391-233ad86885151e5f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="long.png"></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/7140391-83e8a41deb01688e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="short.png"></p>
+<p>可不可以利用BFC达到相似的效果</p>
+<pre><code> .wrap {
+    display: inline-block;/*形成BFC*/
+    width: 100px;
+    background: red;
+    color: aliceblue;
+  }
+</code></pre>
+<p>因为4的原因，使得.wrap 元素形成BFC时高度会计算其内部的float元素，故解决了塌陷问题。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/7140391-85b1da21d51632a6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="BFC1.png"></p>
+<p>这个可以说是一个很方便的解决方案</p>
+<p>案例2、自适应两栏布局</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+  &lt;title&gt;Document&lt;/title&gt;
+  &lt;style&gt;
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      height: 100vh;
+    }
+    .menu {
+      width: 200px;
+      float: left;
+      background: rgb(0, 255, 221);
+      height: 100%;
+      animation: changeW 3s infinite alternate;
+    }
+  /*模拟菜单拖拽*/
+    @keyframes changeW {
+      0% {
+        width: 200px
+      }
+
+      100% {
+        width: 500px;
+      }
+    }
+
+    .content {
+      overflow: hidden;
+      height: 100%;
+      background: rgb(238, 115, 8);
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;menu&quot;&gt;我是菜单&lt;/div&gt;
+    &lt;div class=&quot;content&quot;&gt;我是内容&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p><a href="https://codepen.io/leomelody/pen/rEKGrz">效果</a></p>
+<p>这个就利用了3或者5的特性。现在由于flex布局的普及，可能我们不会再用这样的方法了。。。</p>
+<p>案例3、外边距去哪了？</p>
+<p>code:</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+  &lt;title&gt;Document&lt;/title&gt;
+  &lt;style&gt;
+    .son {
+      margin: 10px;
+      width: 100px;
+      height: 100px;
+      background: paleturquoise;
+    }
+
+   .normal {
+      margin: 10px 0;
+    }
+    .son2 {
+      margin: 10px 0;
+    }
+
+    .BFC {
+      overflow: hidden;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;normal&quot;&gt;
+    &lt;div class=&quot;son&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;div class=&quot;BFC&quot;&gt;
+    &lt;div class=&quot;son2&quot;&gt;
+      &lt;div class=&quot;son2&quot;&gt;
+        &lt;div class=&quot;son&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;      
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;normal&quot;&gt;
+    &lt;div class=&quot;son&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;normal&quot;&gt;
+      &lt;div class=&quot;son&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p><img src="https://upload-images.jianshu.io/upload_images/7140391-d34afb10b5eaae2e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="效果图.png"></p>
+<p>效果解析：</p>
+<p>如图，3，4两个box在垂直方向发生margin重叠间距只有10px符合BFC（此处为html根元素构成BFC）1，2两个特性</p>
+<p>我在son和normal两个类均设置上下边距为10px，但是由于BFC中的6的特性，使得子元素上下外边距传递给父元素且发生重叠，最后两个.normal box之间的边距也就是为10px</p>
+<p>最后，因为给.BFC box 设置overflow: hidden;使其构成BFC，让其直接子元素的上下外边距无法传递给自己，所以，这个box和其相邻box之间的边距变成了20px</p>
+<h3 id="结语">结语</h3>
+<p>本文参考MDN文档以及张鑫旭老师的《CSS世界》一书。</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[请手写去抖节流的通用方法]]></title>
         <id>https://leomelody.github.io//post/qing-shou-xie-qu-dou-jie-liu-de-tong-yong-fang-fa</id>
